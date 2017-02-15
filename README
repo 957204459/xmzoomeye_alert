@@ -1,0 +1,23 @@
+# 安装说明
+#>安装依赖
+yum -y install python python-devel python-setuptools
+easy_install --upgrade pip
+pip install -r requirements.txt --trusted-host pypi.douban.com
+
+
+# 配置说明
+#>主要配置(default.ini)
+  [alert]
+  host=<alert-ip>
+  port=<alert-port>
+  bugreport=<is-report>
+  pidfile=<alert-pid>
+  注意: 配置文件中bugreport字段非0时会自动发送插件自身异常信息
+
+
+#>日志配置(logging.ini)
+
+
+# 运行说明
+cd <pwd>/xmzoomeye-alert
+./restart_service.sh
