@@ -68,20 +68,22 @@ class AlertServer(object):
         alertdatas = copy.deepcopy(self.alertdatas)
         for plugin_name in alertdatas:
             plugin_name = plugin_name.strip()
-            if plugin_name not in self.conf:
+            plugin_comm = plugin_name.split('_')[0]
+            # 如果既不存在分组配置,也不存在独立配置
+            if plugin_name not in self.conf and plugin_comm not in self.conf:
                 # 如果插件未定义触发器则提醒并弹出
                 self.error.error(
                     'not defined expresion for plugin#{0}'.format(plugin_name)
                 )
                 self.alertdatas.pop(plugin_name)
                 continue
-            during = self.conf[plugin_name].get('during').strip()
+            during = self.conf[self.conf.get(plugin_name) or plugin_comm].get('during').strip()
             if during:
                 during = int(during)
-            matchs = self.conf[plugin_name].get('matchs').strip()
+            matchs = self.conf[self.conf.get(plugin_name) or plugin_comm].get('matchs').strip()
             if matchs:
                 matchs = int(matchs)
-            errors = self.conf[plugin_name].get('errors').strip()
+            errors = self.conf[self.conf.get(plugin_name) or plugin_comm].get('errors').strip()
             if errors:
                 errors = int(errors)
 
@@ -90,7 +92,7 @@ class AlertServer(object):
                 if self.alertdatas[plugin_name]['total'] == matchs:
                     # 如果大于等于自定义失败次数就报警
                     if self.alertdatas[plugin_name]['error'] >= errors:
-                        self.sta_alarmes(plugin_name, self.alertdatas[plugin_name])
+                        self.sta_alarmes(self.conf.get(plugin_name) or plugin_comm, self.alertdatas[plugin_name])
                     # 最终都弹出已计算过项
                     self.alertdatas.pop(plugin_name)
             # 如果存在取样时间,就尝试判断失败次数
@@ -98,13 +100,13 @@ class AlertServer(object):
                 # 当前时间-插件第一次数据上报时间时>=during时间时
                 if time.time() - self.alertdatas[plugin_name]['ctime'] >= during:
                     if self.alertdatas[plugin_name]['error'] >= errors:
-                        self.sta_alarmes(plugin_name, self.alertdatas[plugin_name])
+                        self.sta_alarmes(self.conf.get(plugin_name) or plugin_comm, self.alertdatas[plugin_name])
                         # 最终都弹出已计算过项
                         self.alertdatas.pop(plugin_name)
                 else:
                     # 当前时间-插件第一次数据上报时间时<during时间时,但错误数已超出
                     if self.alertdatas[plugin_name]['error'] >= errors:
-                        self.sta_alarmes(plugin_name, self.alertdatas[plugin_name])
+                        self.sta_alarmes(self.conf.get(plugin_name) or plugin_comm, self.alertdatas[plugin_name])
                         # 最终都弹出已计算过项
                         self.alertdatas.pop(plugin_name)
                     else:
